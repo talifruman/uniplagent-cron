@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Run the check
-        run: curl -fsS --max-time 90 "https://unibestie.vercel.app/api/push?a=tick"
+        run: curl -fsS --max-time 90 "https://uniplagent.vercel.app/api/push?a=tick"
   # GitHub pauses schedules in a repository with no activity for 60 days: a small commit on the 1st of each month keeps it running
   keepalive:
     if: github.event_name == 'schedule'
