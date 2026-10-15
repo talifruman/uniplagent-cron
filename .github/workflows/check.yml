@@ -1,0 +1,32 @@
+# Calls UniPlagent's notification check every 5 minutes. The address has no secret: the server runs the check at most
+# once a minute and only sends what each user's own settings allow.
+name: UniPlagent check
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Run the check
+        run: curl -fsS --max-time 90 "https://unibestie.vercel.app/api/push?a=tick"
+  # GitHub pauses schedules in a repository with no activity for 60 days: a small commit on the 1st of each month keeps it running
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Monthly keepalive
+        run: |
+          if [ "$(date -u +%d%H%M)" \< "010010" ]; then
+            date -u +%Y-%m-%d > keepalive.txt
+            git config user.name "uniplagent-cron"
+            git config user.email "uniplagent-cron@users.noreply.github.com"
+            git add keepalive.txt
+            git commit -m "keepalive $(date -u +%Y-%m)" && git push || true
+          fi
