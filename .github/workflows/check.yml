@@ -1,9 +1,11 @@
-# Calls UniPlagent's notification check every 5 minutes. The address has no secret: the server runs the check at most
-# once a minute and only sends what each user's own settings allow.
+# Calls UniPlagent's notification check every 5 minutes, from 07:00 to midnight Israel time: 04-21 UTC covers it in
+# summer and in winter, and the server itself rests from 00:00 to 07:00 Israel time, so the database can sleep at night
+# (Tali, 15.10.2026). The address has no secret: the server runs the check at most once a minute and only sends what
+# each user's own settings allow.
 name: UniPlagent check
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 4-21 * * *'
   workflow_dispatch:
 permissions:
   contents: write
@@ -14,7 +16,8 @@ jobs:
     steps:
       - name: Run the check
         run: curl -fsS --max-time 90 "https://uniplagent.vercel.app/api/push?a=tick"
-  # GitHub pauses schedules in a repository with no activity for 60 days: a small commit on the 1st of each month keeps it running
+  # GitHub pauses schedules in a repository with no activity for 60 days: a small commit on the 1st of each month (the
+  # first runs, 04:00 UTC) keeps it running
   keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Monthly keepalive
         run: |
-          if [ "$(date -u +%d%H%M)" \< "010010" ]; then
+          if [ "$(date -u +%d%H%M)" \< "010430" ]; then
             date -u +%Y-%m-%d > keepalive.txt
             git config user.name "uniplagent-cron"
             git config user.email "uniplagent-cron@users.noreply.github.com"
